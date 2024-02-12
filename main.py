@@ -1,6 +1,6 @@
 from pyspark import SparkConf, SparkContext, RDD
 from pyspark.sql import SparkSession, DataFrame
-
+from pyspark.sql.functions import split
 # The code below may help you if your pc cannot find the correct python executable.
 # Don't use this code on the server!
 # import os
@@ -33,8 +33,15 @@ def q0a(spark_context: SparkContext, on_server: bool) -> DataFrame:
     spark_session = SparkSession(spark_context)
 
     # TODO: Implement Q0a here by creating a Dataset of DataFrame out of the file at {@code plays_file_path}.
-    df = spark_session.read.format("text").option("header", "true").option("inferSchema", "true").load(plays_file_path)
+    df = spark_session.read.format("text").load(plays_file_path)
+    df = df.select(
+        split(df['value'], ',').getItem(0).cast('int').alias('userid'),
+        split(df['value'], ',').getItem(1).cast('int').alias('songid'),
+        split(df['value'], ',').getItem(2).cast('int').alias('rating')
+    )
+
     return df
+    
 
 
 def q0b(spark_context: SparkContext, on_server: bool) -> RDD:
@@ -47,7 +54,20 @@ def q0b(spark_context: SparkContext, on_server: bool) -> RDD:
 
 def q1(spark_context: SparkContext, data_frame: DataFrame):
     # TODO: Implement Q1 here
-    return
+    spark_session = SparkSession(spark_context)
+    # Register the DataFrame as a SQL temporary view
+    data_frame.createOrReplaceTempView("plays")
+    query = "SELECT COUNT(*)                                    \
+            FROM (                                              \
+                SELECT userid                                   \
+                FROM plays                                      \
+                WHERE rating IS NOT NULL                        \
+                GROUP BY userid                                 \
+                HAVING COUNT(rating) >= 100 AND AVG(rating) < 2 \
+            ) AS filtered_users"
+    sqlDF = spark_session.sql(query)
+    print(sqlDF.show())
+    return sqlDF
 
 
 def q2(spark_context: SparkContext, rdd: RDD):
@@ -80,10 +100,10 @@ if __name__ == '__main__':
 
     q1(spark_context, data_frame)
 
-    q2(spark_context, rdd)
+    # q2(spark_context, rdd)
 
-    q4(spark_context, rdd)
+    # q4(spark_context, rdd)
 
-    q5(spark_context, rdd)
+    # q5(spark_context, rdd)
 
     spark_context.stop()
