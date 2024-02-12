@@ -28,21 +28,21 @@ def get_spark_context(on_server: bool) -> SparkContext:
 
 
 def q0a(spark_context: SparkContext, on_server: bool) -> DataFrame:
-    plays_file_path = "/plays.txt" if on_server else "plays.txt"
+    plays_file_path = "plays.txt" if on_server else "plays.txt"
 
     spark_session = SparkSession(spark_context)
 
     # TODO: Implement Q0a here by creating a Dataset of DataFrame out of the file at {@code plays_file_path}.
-
-    return None
+    df = spark_session.read.format("text").option("header", "true").option("inferSchema", "true").load(plays_file_path)
+    return df
 
 
 def q0b(spark_context: SparkContext, on_server: bool) -> RDD:
     plays_file_path = "/plays.txt" if on_server else "plays.txt"
 
     # TODO: Implement Q0b here by creating an RDD out of the file at {@code plays_file_path}.
-
-    return None
+    rdd = spark_context.textFile(plays_file_path)
+    return rdd
 
 
 def q1(spark_context: SparkContext, data_frame: DataFrame):
