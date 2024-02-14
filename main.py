@@ -3,10 +3,10 @@ from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import split
 # The code below may help you if your pc cannot find the correct python executable.
 # Don't use this code on the server!
-# import os
-# import sys
-# os.environ['PYSPARK_PYTHON'] = sys.executable
-# os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
+import os
+import sys
+os.environ['PYSPARK_PYTHON'] = sys.executable
+os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
 
 # TODO: Make sure that if you installed Spark version 3.3.4 (recommended) that you install the same version of
 #  PySpark. You can do this by running the following command: pip install pyspark==3.3.4
@@ -71,6 +71,21 @@ def q1(spark_context: SparkContext, data_frame: DataFrame):
 
 
 def q2(spark_context: SparkContext, rdd: RDD):
+    valid_ratings = rdd.filter(lambda x: len(x.split(',')) == 3) \
+        .map(lambda x: (x.split(',')[0], (float(x.split(',')[2]), 1)))
+
+    users_with_100_ratings = valid_ratings.reduceByKey(lambda a, b: (a[0] + b[0], a[1] + b[1])) \
+        .filter(lambda x: x[1][1] >= 100)
+
+    average_rating = users_with_100_ratings.map(lambda x: (x[0], float(x[1][0] / x[1][1])))
+
+
+    min_avg_rating = average_rating.reduce(lambda a, b: a if a[1] < b[1] else b)
+    print(min_avg_rating)
+   
+
+
+   
     return
 
 
@@ -97,10 +112,11 @@ if __name__ == '__main__':
     data_frame = q0a(spark_context, on_server)
 
     rdd = q0b(spark_context, on_server)
+    
 
     q1(spark_context, data_frame)
 
-    # q2(spark_context, rdd)
+    q2(spark_context, rdd)
 
     # q4(spark_context, rdd)
 
