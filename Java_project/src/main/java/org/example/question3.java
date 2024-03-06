@@ -4,7 +4,6 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.SparkSession;
 import scala.Tuple3;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +14,6 @@ import org.apache.spark.mllib.linalg.Vectors;
 import org.apache.spark.api.java.JavaPairRDD;
 import scala.Tuple2;
 
-import java.lang.Math; 
 
 public class question3 {
 
@@ -87,14 +85,14 @@ public class question3 {
             Vector w2 = Vectors.sparse(size, v2.indices(), v2.values());
 
             double dotProduct = w1.dot(w2);
-            double norm1 = Vectors.norm(w1, 2.0);
-            double norm2 = Vectors.norm(w2, 2.0);
+            double norm1 = Vectors.norm(w1, 2);
+            double norm2 = Vectors.norm(w2, 2);
 
-        return dotProduct / (Math.sqrt(norm1) * Math.sqrt(norm2));
+        return dotProduct / (norm1 * norm2);
     }
 
     public static List<Tuple3<Integer, Integer, Double>> solution(SparkSession spark, JavaRDD<String> rddRatings) {
-        List<Tuple3<Integer, Integer, Double>> ans = null;
+        List<Tuple3<Integer, Integer, Double>> ans = new ArrayList<>();
         
         // Create a PairRDD of userID -> (songID, rating)
         JavaPairRDD<Integer, Tuple2<Integer, Integer>> userRatings = rddRatings.mapToPair(line -> {
@@ -120,30 +118,35 @@ public class question3 {
             .filter(pair -> pair._1._1 < pair._2._1); // To avoid duplicate pairs and self-comparisons
 
         //Calculate  cosine similarities
-        JavaPairRDD<Tuple2<Integer, Integer>, Double> cosineSimilarities = cartesianPairs
-            .mapToPair(pair -> new Tuple2<> (new Tuple2<>(pair._1._1, pair._2._1), cosineSimilarity(pair._1._2, pair._2._2)));
+        JavaPairRDD<Integer, Tuple2<Integer, Double>> cosineSimilarities = cartesianPairs
+            .mapToPair(pair -> new Tuple2<> (pair._1._1, new Tuple2<>(pair._2._1, cosineSimilarity(pair._1._2, pair._2._2))));
     
 
         //Check the requirements
-        JavaPairRDD<Tuple2<Integer, Integer>, Double> upperCosineSimilarities = cosineSimilarities.filter(pair -> pair._2 > 0.95);
+        JavaPairRDD<Integer, Tuple2<Integer, Double>> upperCosineSimilarities = cosineSimilarities.filter(pair -> pair._2._2 > 0.95);
 
         //return max value
-        Tuple2<Tuple2<Integer, Integer>, Double> res = upperCosineSimilarities.reduce((t1, t2) -> {
+        JavaPairRDD<Integer, Tuple2<Integer, Double>> results = upperCosineSimilarities.reduceByKey((t1, t2) -> {
             if (t1._2 > t2._2){
                 return t1;
             }else if(t1._2 == t2._2){
-                return t1._1._2 < t2._1._2 ? t1 : t2;
+                return t1._1 < t2._1 ? t1 : t2;
             }else {
                 return t2;
             }
 
         });
 
-        Tuple3<Integer, Integer, Double> res2 = new Tuple3<>(res._1._1, res._1._2, res._2);
+        // Collect the elements from the RDD to the driver program
+        List<Tuple2<Integer, Tuple2<Integer, Double>>> pairList = results.collect();
 
-        //one answer for now, should be a list of ans
-        ans.add(res2);
-
+        //this shouldnt be like this, but for just for now
+        for (Tuple2<Integer, Tuple2<Integer, Double>> pair : pairList) {
+            Integer key = pair._1();
+            Integer value1 = pair._2()._1();
+            Double value2 = pair._2()._2();
+            ans.add(new Tuple3<>(key, value1, value2));
+        }
         return ans;
     }
 
