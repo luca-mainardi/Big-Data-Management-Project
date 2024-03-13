@@ -7,7 +7,6 @@ import scala.Tuple3;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.spark.mllib.linalg.Vector;
 import org.apache.spark.mllib.linalg.SparseVector;
 import org.apache.spark.mllib.linalg.Vectors;
 
@@ -16,13 +15,12 @@ import scala.Tuple2;
 
 
 public class question3 {
-
+    static int sparseVectorSize = (int) Math.pow(2, 31);
+    
     public static SparseVector joinSparseVector(SparseVector v1, SparseVector v2) {
 
-        int size = v1.size() > v2.size() ? v1.size() : v2.size();
         List<Integer> indices = new ArrayList<>();
         List<Double> values = new ArrayList<>();
-
 
         SparseVector shorter; SparseVector longer;
 
@@ -74,19 +72,14 @@ public class question3 {
             values_array[k] = values.get(k);
         }
 
-        return (SparseVector) Vectors.sparse(size, indices_array, values_array);
+        return (SparseVector) Vectors.sparse(sparseVectorSize, indices_array, values_array);
     }
 
     public static double cosineSimilarity(SparseVector v1, SparseVector v2) {
-            //check the sizes first in order to do the dot product
-            int size = v1.size() < v2.size() ? v1.size() : v2.size();
 
-            Vector w1 = Vectors.sparse(size, v1.indices(), v1.values());
-            Vector w2 = Vectors.sparse(size, v2.indices(), v2.values());
-
-            double dotProduct = w1.dot(w2);
-            double norm1 = Vectors.norm(w1, 2);
-            double norm2 = Vectors.norm(w2, 2);
+            double dotProduct = v1.dot(v2);
+            double norm1 = Vectors.norm(v1, 2);
+            double norm2 = Vectors.norm(v2, 2);
 
         return dotProduct / (norm1 * norm2);
     }
@@ -109,7 +102,7 @@ public class question3 {
         // Reduce by key to get Vector of ratings 
         // userID -> Vector
         JavaPairRDD<Integer, SparseVector> userTotalRatings = ratedUserSongs
-            .mapValues(pair -> (SparseVector) Vectors.sparse(pair._1 + 1, new int[] {pair._1}, new double[] {pair._2}))
+            .mapValues(pair -> (SparseVector) Vectors.sparse(sparseVectorSize, new int[] {pair._1}, new double[] {pair._2}))
             .reduceByKey((t1, t2) -> joinSparseVector(t1,t2));
         
         // Cartesian product to generate pairs
@@ -138,7 +131,7 @@ public class question3 {
         }).map(pair -> new Tuple3<> (pair._1(), pair._2()._1(), pair._2()._2()));
 
         ans = results.collect(); 
-        
+
         return ans;
     }
 
