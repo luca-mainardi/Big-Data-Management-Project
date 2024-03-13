@@ -126,7 +126,7 @@ public class question3 {
         JavaPairRDD<Integer, Tuple2<Integer, Double>> upperCosineSimilarities = cosineSimilarities.filter(pair -> pair._2._2 > 0.95);
 
         //return max value
-        JavaPairRDD<Integer, Tuple2<Integer, Double>> results = upperCosineSimilarities.reduceByKey((t1, t2) -> {
+        JavaRDD<Tuple3<Integer, Integer, Double>> results = upperCosineSimilarities.reduceByKey((t1, t2) -> {
             if (t1._2 > t2._2){
                 return t1;
             }else if(t1._2 == t2._2){
@@ -135,18 +135,10 @@ public class question3 {
                 return t2;
             }
 
-        });
+        }).map(pair -> new Tuple3<> (pair._1(), pair._2()._1(), pair._2()._2()));
 
-        // Collect the elements from the RDD to the driver program
-        List<Tuple2<Integer, Tuple2<Integer, Double>>> pairList = results.collect();
-
-        //this shouldnt be like this, but for just for now
-        for (Tuple2<Integer, Tuple2<Integer, Double>> pair : pairList) {
-            Integer key = pair._1();
-            Integer value1 = pair._2()._1();
-            Double value2 = pair._2()._2();
-            ans.add(new Tuple3<>(key, value1, value2));
-        }
+        ans = results.collect(); 
+        
         return ans;
     }
 
