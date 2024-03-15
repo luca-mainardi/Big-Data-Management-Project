@@ -36,7 +36,7 @@ public class question3 {
             } 
             else{ //we exploit the fact that two indices cannot be equal for the same user
                 newIndicesArray[k] = v2.indices()[j];
-                newValuesArray[k] = v2.indices()[j];
+                newValuesArray[k] = v2.values()[j];
                 j++;
             }
             k++;
@@ -67,7 +67,7 @@ public class question3 {
             double norm1 = Vectors.norm(v1, 2);
             double norm2 = Vectors.norm(v2, 2);
 
-        return dotProduct / (norm1 * norm2);
+        return dotProduct / (double) (norm1 * norm2);
     }
 
     public static List<Tuple3<Integer, Integer, Double>> solution(SparkSession spark, JavaRDD<String> rddRatings) {
@@ -88,7 +88,7 @@ public class question3 {
         // Reduce by key to get Vector of ratings 
         // userID -> Vector
         JavaPairRDD<Integer, SparseVector> userTotalRatings = ratedUserSongs
-            .mapValues(pair -> (SparseVector) Vectors.sparse(sparseVectorSize, new int[] {pair._1}, new double[] {pair._2}))
+            .mapValues(pair -> (SparseVector) Vectors.sparse(sparseVectorSize, new int[] {pair._1 - 1}, new double[] { pair._2}))
             .reduceByKey((t1, t2) -> joinSparseVector(t1,t2));
         
         // Cartesian product to generate pairs
@@ -99,12 +99,11 @@ public class question3 {
         //Calculate  cosine similarities
         JavaPairRDD<Integer, Tuple2<Integer, Double>> cosineSimilarities = cartesianPairs
             .mapToPair(pair -> new Tuple2<> (pair._1._1, new Tuple2<>(pair._2._1, cosineSimilarity(pair._1._2, pair._2._2))));
-    
 
         //Check the requirements
         JavaPairRDD<Integer, Tuple2<Integer, Double>> upperCosineSimilarities = cosineSimilarities.filter(pair -> pair._2._2 > 0.95);
 
-        //return max value
+        //return max value(s)
         JavaRDD<Tuple3<Integer, Integer, Double>> results = upperCosineSimilarities.reduceByKey((t1, t2) -> {
             if (t1._2 > t2._2){
                 return t1;
