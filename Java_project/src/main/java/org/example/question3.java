@@ -16,63 +16,49 @@ import scala.Tuple2;
 
 public class question3 {
     static int sparseVectorSize = (int) Math.pow(2, 31);
-    
+
     public static SparseVector joinSparseVector(SparseVector v1, SparseVector v2) {
+                
+        int i = 0; //index for v1
+        int j = 0; //index for v2
+        int k = 0; //index for new vector
+        
+        int indexSize = v1.indices().length + v2.indices().length;
 
-        List<Integer> indices = new ArrayList<>();
-        List<Double> values = new ArrayList<>();
+        int[] newIndicesArray = new int[indexSize];
+        double[] newValuesArray = new double[indexSize];
 
-        SparseVector shorter; SparseVector longer;
-
-        if(v1.indices().length < v2.indices().length){
-            shorter = v1;
-            longer = v2;
-        }else{
-            shorter = v2;
-            longer = v1;
-        }
-
-        //i index for shorter, j index for longer
-        int i = 0; int j = 0;
-        while(j<longer.indices().length) {
-            int longer_index = longer.indices()[j];
-            double longer_value = longer.values()[j];
-
-            if(i < shorter.indices().length){
-                int shorter_index = shorter.indices()[i];
-                double shorter_value = shorter.values()[i];
-
-                if(shorter_index < longer_index){
-                    indices.add(shorter_index);
-                    values.add(shorter_value);
-                    i++;
-                }
-                else{
-                    indices.add(longer_index);
-                    values.add(longer_value);
-                    j++;
-                }
-            }
-            else {
-                indices.add(longer_index);
-                values.add(longer_value);
+        while(i < v1.indices().length && j < v2.indices().length){
+            if(v1.indices()[i] < v2.indices()[j]){
+                newIndicesArray[k] = v1.indices()[i];
+                newValuesArray[k] = v1.values()[i];
+                i++;
+            } 
+            else{ //we exploit the fact that two indices cannot be equal for the same user
+                newIndicesArray[k] = v2.indices()[j];
+                newValuesArray[k] = v2.indices()[j];
                 j++;
             }
+            k++;
         }
 
-        //create the arrays
-        int[] indices_array = new int[indices.size()];
-        double[] values_array = new double[values.size()];
-
-        for(int k = 0; k < indices.size(); k++) {
-            indices_array[k] = indices.get(k);
+        //finish i
+        while(i < v1.indices().length){
+            newIndicesArray[k] = v1.indices()[i];
+            newValuesArray[k] = v1.values()[i];
+            i++;
+            k++;
         }
 
-        for(int k = 0; k < values.size(); k++) {
-            values_array[k] = values.get(k);
+        //finish j
+        while(j < v2.indices().length){
+            newIndicesArray[k] = v2.indices()[j];
+            newValuesArray[k] = v2.values()[j];
+            j++;
+            k++;
         }
 
-        return (SparseVector) Vectors.sparse(sparseVectorSize, indices_array, values_array);
+        return (SparseVector) Vectors.sparse(sparseVectorSize, newIndicesArray, newValuesArray);
     }
 
     public static double cosineSimilarity(SparseVector v1, SparseVector v2) {
