@@ -23,18 +23,20 @@ public class question3 {
         int j = 0; //index for v2
         int k = 0; //index for new vector
         
+        // We create new arrays for indices and values
         int indexSize = v1.indices().length + v2.indices().length;
 
         int[] newIndicesArray = new int[indexSize];
         double[] newValuesArray = new double[indexSize];
 
+        // We iterate through the two vectors and add the values to the new array
         while(i < v1.indices().length && j < v2.indices().length){
             if(v1.indices()[i] < v2.indices()[j]){
                 newIndicesArray[k] = v1.indices()[i];
                 newValuesArray[k] = v1.values()[i];
                 i++;
             } 
-            else{ //we exploit the fact that two indices cannot be equal for the same user
+            else{ // We exploit the fact that two indices cannot be equal for the same user
                 newIndicesArray[k] = v2.indices()[j];
                 newValuesArray[k] = v2.values()[j];
                 j++;
@@ -42,7 +44,7 @@ public class question3 {
             k++;
         }
 
-        //finish i
+        // Finish i
         while(i < v1.indices().length){
             newIndicesArray[k] = v1.indices()[i];
             newValuesArray[k] = v1.values()[i];
@@ -50,7 +52,7 @@ public class question3 {
             k++;
         }
 
-        //finish j
+        // Finish j
         while(j < v2.indices().length){
             newIndicesArray[k] = v2.indices()[j];
             newValuesArray[k] = v2.values()[j];
@@ -58,9 +60,11 @@ public class question3 {
             k++;
         }
 
+        // We return the new vector
         return (SparseVector) Vectors.sparse(sparseVectorSize, newIndicesArray, newValuesArray);
     }
 
+    // We create a function to calculate the cosine similarity between two vectors
     public static double cosineSimilarity(SparseVector v1, SparseVector v2) {
 
             double dotProduct = v1.dot(v2);
@@ -96,14 +100,14 @@ public class question3 {
             .cartesian(userTotalRatings)
             .filter(pair -> pair._1._1 < pair._2._1); // To avoid duplicate pairs and self-comparisons
 
-        //Calculate  cosine similarities
+        // Calculate  cosine similarities
         JavaPairRDD<Integer, Tuple2<Integer, Double>> cosineSimilarities = cartesianPairs
             .mapToPair(pair -> new Tuple2<> (pair._1._1, new Tuple2<>(pair._2._1, cosineSimilarity(pair._1._2, pair._2._2))));
 
-        //Check the requirements
+        // Check the requirements
         JavaPairRDD<Integer, Tuple2<Integer, Double>> upperCosineSimilarities = cosineSimilarities.filter(pair -> pair._2._2 > 0.95);
 
-        //return max value(s)
+        // Return max value(s)
         JavaRDD<Tuple3<Integer, Integer, Double>> results = upperCosineSimilarities.reduceByKey((t1, t2) -> {
             if (t1._2 > t2._2){
                 return t1;
