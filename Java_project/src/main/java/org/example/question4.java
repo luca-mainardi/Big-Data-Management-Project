@@ -25,28 +25,28 @@ public class question4 {
         float epsilon = (float) 0.1;
         float delta = (float) 0.1;
         int r = (int) Math.ceil(Math.log(1 / delta) / Math.pow(epsilon, 2));
-        int bitmap = 31;
+        int bitmap = 32;
         Random random = new Random();
         int[] a = random.ints(r, 1, 1001).toArray();
         int[] b = random.ints(r, 0, 1001).toArray();
 
 
         // Create a RDD of songId
-        int[] hashes = rddRatings.map(line -> {
+        long[] hashes = rddRatings.map(line -> {
             String[] parts = line.split(",");
             int songID = Integer.parseInt(parts[1]);
             return songID;
         })
         .map(songID -> {
             //Initialize array of zeros
-            int[] vectors = new int[r];
+            long[] vectors = new long[r];
             for(int i=0; i<r; i++){
                 vectors[i] = 0;
             }
 
             for(int i=0; i < r; i++){
                 int hash_value = (a[i]*songID + b[i]) % bitmap;
-                vectors[i] |= (int) Math.pow(2, hash_value);  
+                vectors[i] |= (long) Math.pow(2, hash_value);  
                 // System.out.println("Hash value: "+hash_value+";  Vector : "+String.format("%32s", Integer.toBinaryString(vectors[i])).replace(' ', '0'));
             }
             return vectors;
@@ -99,9 +99,7 @@ public class question4 {
 
         // Integer totalSum = trailingZeros.reduce((x,y) -> x+y);
 
-        // System.out.println("total sum: "+ totalSum);
-        // System.out.println("r: "+ r);
-
+        System.out.println("total sum: "+ totalSum);
 
         // System.out.println("Result: " + 1.3 * Math.pow(2, totalSum/r));
 
