@@ -46,7 +46,7 @@ public class question4 {
 
             for(int i=0; i < r; i++){
                 int hash_value = (a[i]*songID + b[i]) % bitmap;
-                vectors[i] += (int) Math.pow(2, hash_value);  
+                vectors[i] |= (int) Math.pow(2, hash_value);  
                 // System.out.println("Hash value: "+hash_value+";  Vector : "+String.format("%32s", Integer.toBinaryString(vectors[i])).replace(' ', '0'));
             }
             return vectors;
@@ -55,7 +55,7 @@ public class question4 {
             for(int i=0; i<r; i++){
                 // System.out.println("Vector 1: " + String.format("%32s",Integer.toBinaryString(s1[i])).replace(' ', '0'));
                 // System.out.println("Vector 2: " + String.format("%32s",Integer.toBinaryString(s2[i])).replace(' ', '0'));
-                s1[i] += s2[i];
+                s1[i] |= s2[i];
                 // System.out.println("Total: " + String.format("%32s",Integer.toBinaryString(s1[i])).replace(' ', '0'));
             }
             return s1;
