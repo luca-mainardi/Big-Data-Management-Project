@@ -23,16 +23,20 @@ public class Main {
         Logger.getLogger("akka").setLevel(Level.OFF);
         Logger.getRootLogger().setLevel(Level.OFF);
 
-        String master = "local[*]";
+
+        boolean onServer = true; // TODO: Set this to true if and only if building a JAR to run on the server
+
         SparkConf conf = new SparkConf()
-                .setAppName(Main.class.getName())
-                .setMaster(master);
+                .setAppName(Main.class.getName());
+        if (!onServer) conf = conf.setMaster("local[*]");
         JavaSparkContext sc = new JavaSparkContext(conf);
+
         SparkSession spark = SparkSession
                 .builder()
                 .appName("2AMD15")
                 .getOrCreate();
-        String path = "Java_project/dataset/plays.txt";
+
+        String path = (onServer) ? "/plays.txt" : "plays.txt";
 
         // Question 0: Load the data as an RDD and as a DataFrame
         JavaRDD<String> rddRatings = null;
