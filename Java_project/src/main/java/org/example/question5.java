@@ -21,7 +21,7 @@ class question5 {
         List<Tuple4<Integer, Integer, Integer, Integer>> ans = null;
         // your code goes here
 
-        // Create a PairRDD of (userID, songID) -> rating
+        // Create a PairRDD of <(userID, songID), rating>
         JavaPairRDD<Tuple2<Integer, Integer>, Integer> userRatings = rddRatings.mapToPair(line -> {
             String[] parts = line.split(",");
             int userID = Integer.parseInt(parts[0]);
@@ -34,7 +34,7 @@ class question5 {
         JavaPairRDD<Tuple2<Integer, Integer>, Integer> ratedUserSong = userRatings
                 .filter(pair -> pair._2 != -1);
 
-        // map to pair to get (userId, songId)
+        // map to pair to get <userId, BitSet> with BitSet representing the song
         JavaPairRDD<Integer, BitSet> userSongPairs = ratedUserSong
                 .mapToPair(pair -> {
                     BitSet bitSet = new BitSet();
@@ -51,6 +51,7 @@ class question5 {
             return mergedSongs;
         });
 
+        // Filter out users with more than 8000 songs
         JavaPairRDD<Integer, BitSet> validCountUserSongs = userSongs.filter(pair -> pair._2().cardinality() < 8000);
 
         // Compute cartesian product to get all possible pairs of users and their
@@ -105,8 +106,8 @@ class question5 {
                     return new Tuple4<>(userId1, userId2, userId3, distinctCount);
                 });
 
+        // Collect the result
         ans = tripletsDistinctSongsCount.collect();
-
         return ans;
 
     }
