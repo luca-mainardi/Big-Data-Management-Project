@@ -1,5 +1,5 @@
 venv/
-Java_project/dataset/plays.txt
 **/.DS_Store
 .idea/
 plays.txt
+*.DS_Store
